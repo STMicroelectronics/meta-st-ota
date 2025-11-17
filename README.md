@@ -4,7 +4,9 @@
 ## Overview
 - This layer is used to demonstrate SW update OTA use case on STM32MPU boards.
 - It uses A/B mechanism concept : all updatable partitions are duplicated : for example, rootfs becomes rootfs-a and rootfs-b. When a software running on rootfs-a is notified to be upgraded, the new version is installed on rootfs-b, and then system reboots on rootfs-b which becomes the new active version.
-- The embedded client is [rauc](https://rauc.readthedocs.io/en/latest/) which get software updates from [Hawkbit](https://www.eclipse.org/hawkbit/) server. A glue layer called [rauc-hawkbit](https://github.com/rauc/rauc-hawkbit) polls the Hawkbit server to transmit new bundle to rauc.
+- The embedded client is [rauc](https://rauc.readthedocs.io/en/latest/) which can get software updates from:
+  - A back-end framework (ex:[Hawkbit](https://www.eclipse.org/hawkbit/)) with a glue layer called [rauc-hawkbit](https://github.com/rauc/rauc-hawkbit) polls the Hawkbit server to transmit new bundle to rauc. Nevertheless, the latest Hawkbit versions don't include UI because Vaadin 8 hawkBit UI was shut down (more details [here](https://eclipse.dev/hawkbit/blog/2023-11-22-vaadin8_ui_discontinuation/)), that's why event if [rauc-hawkbit](https://github.com/rauc/rauc-hawkbit) is still included in this layer, [Hawkbit](https://www.eclipse.org/hawkbit/) won't be demonstrated in this layer.
+  - Any deployment method listed [here](https://rauc.readthedocs.io/en/latest/advanced.html#software-deployment).
 - This layer is based on official DV-6.1 [openstlinux-25-06-11](https://wiki.st.com/stm32mpu/wiki/STM32_MPU_OpenSTLinux_release_note_-_v6.1.0) which also needs [rauc layer](https://github.com/rauc/meta-rauc).
 
 
@@ -15,6 +17,7 @@ This release is mostly an update to be able to run on top of ecosystem-v6.1.0, w
   - u-boot: propagate boot index
   - u-boot: stm32prog: add support rootfs-a for OTA
   - u-boot: mkfwumdata: manage bank accepted entry
+- Hawkbit not demonstrated anymore (since Vaadin 8 hawkBit UI was shut down)
 
 ## Table of Contents
 1. Documentation
@@ -35,6 +38,8 @@ This release is mostly an update to be able to run on top of ecosystem-v6.1.0, w
 - [STM32MP25 ressources](https://wiki.st.com/stm32mpu/wiki/STM32MP25_resources)
 - [MP25 Eval schematic](https://wiki.st.com/stm32mpu/wiki/STM32MP25_resources#MB1936_schematics)
 - [Rauc documentation](https://rauc.readthedocs.io/en/latest/)
+- [Secure Firmware Update wiki](https://wiki.st.com/stm32mpu/wiki/Secure_Firmware_Update)
+- [How to handle secure firmware update wiki](https://wiki.st.com/stm32mpu/wiki/How_to_handle_secure_firmware_update)
 
 
 ## 2. HW requirements
@@ -93,83 +98,28 @@ bitbake update-st-bundle-stm32mp257f-ev1
 ```
 More information in [RAUC documentation](https://rauc.readthedocs.io/en/latest/integration.html#bundle-generation)
 
-### How to put in place the Hawkbit server ?
-The latest Hawkbit versions don't include UI because Vaadin 8 hawkBit UI was shut down : more details [here](https://eclipse.dev/hawkbit/blog/2023-11-22-vaadin8_ui_discontinuation/), so please use the v0.4.1 for this demonstration.
-```
-docker run -p 8080:8080 hawkbit/hawkbit-update-server:0.4.1
-```
-When the server is started, you can connect to its web interface following this URL : http://localhost:8080/UI/login/#/ with Username=admin and Password=admin.
-You can register your devices to Hawkbit through the following script that can be customized (a `sudo` can be needded):
-```
-curl -X POST \
- http://localhost:8080/rest/v1/targets --user admin:admin \
- -H 'Content-Type: application/json' \
- -H 'cache-control: no-cache' \
- -d '[ {
- "securityToken" : "<the securityToken of the device, ex:380ff2b5908e776cb69159f3f4477e4f>",
- "controllerId" : "<the controllerId of the device, ex: stm32mpu_1234>",
- "name" : "<the name of the device, ex:stm32mpu_1234>"
-} ]'
-```
-If the configuration is well done, you should see in Hawkbit web interface, in deployment page, the new device in "Target" enclosure.
+### How to deploy the bundle into the target ?
+The latest Hawkbit versions don't include UI because Vaadin 8 hawkBit UI was shut down : more details [here](https://eclipse.dev/hawkbit/blog/2023-11-22-vaadin8_ui_discontinuation/), .
 
+More information in [Hawkbit documentation](https://www.eclipse.org/hawkbit/) and [rauc-hawkbit documentation](https://github.com/rauc/rauc-hawkbit/blob/master/README.rst)
 
-More information in [Hawkbit documentation](https://www.eclipse.org/hawkbit/)
-
-### How to add the bundle on the frontend server ?
-1. In upload page, create a software module (type : OS) called stm32mp1 and upload the bundle from `<Yocto source tree>
-/build-openstlinuxweston-stm32mp1-ota/tmp-glibc/deploy/images/stm32mp1-ota/update-st-bundle-stm32mp1-ota.raucb`
-2. In Distributions page, create a new distribution (type: OS with app(s)) called distri-stm32mp1, and drag and drop the software module into the new distrubution
-3. In deployment, drag and drop the distribution into the target, and confirm assignement by keepin "forced" selected : The server is ready to send the OTA update as soon as rauc-hawkbit will connect to it.
-
-### How to configure rauc-hawkbit client ?
-The layer contains a configuration file that needs to be updated according with Hawkbit configuration.
-The file is `layers/meta-st/meta-st-ota/recipes-support/rauc-hawkbit/rauc-hawkbit/config.cfg`, and is copied in `/etc/rauc-hawkbit` on the board.
-
+After having built the bundle, copy it into the target:
 ```
-[client]
-hawkbit_server = <IP address of your Hawkbit's server>:8080
-ssl = false
-ca_file =
-tenant_id = DEFAULT
-target_name = <the controllerId already configured in Hawkbit server, ex:stm32mpu_1234>
-auth_token = <the securityToken already configured in Hawkbit server, ex:380ff2b5908e776cb69159f3f4477e4f>
-mac_address = <the mac addr of your board>
-bundle_download_location = <by default : /usr/local/bundle.raucb>
-log_level = debug
+wget http://<your server IP addr>/<bundle file> && sync
+rauc install /usr/local/<bundle file>
 ```
-More information in [rauc-hawkbit documentation](https://github.com/rauc/rauc-hawkbit/blob/master/README.rst)
+More information in [RAUC documentation](https://rauc.readthedocs.io/en/latest/examples.html#update-installation)
 
-### Launch the OTA
-Since rauc-1.7, rauc-hawkbit service is automatically loaded on boot by systemd, so the command `rauc-hawkbit-client -c /etc/rauc-hawkbit/config.cfg` is already started on boot.
+## 6. Extra explanations
 
-Here are the most important logs that can be observed with `journalctl -f` command:
-```
-INFO     Deployment found for this target
-INFO     Starting bundle download
-INFO     Download successful
-INFO     Starting installation
-[It will install images into partitions according with slot state]
-INFO     Update progress: 100% Installing done.
-INFO     Download successful
-Result:   SUCCESSFUL
-```
-
-At the end of the download, the script /usr/lib/rauc/post-install.sh is called in order to update some part in the new flashed images:
+### Post install
+At the end of the install, the script /usr/lib/rauc/post-install.sh is called by rauc in order to update some part in the new flashed images:
 - update kernel cmdline : root mount point and rauc.slot paramters
 - update vendor and boot mount points
 - update boot partition to boot on the new flashed software
 - bootcount doesn't need to be reset here anymore as it is done by tf-a when it performs a normal boot (not trial)
 
-After that, the status of the update on Hawkbit server will be marked as a green tick.
-
 On reboot, if new image succeeds to boot, the service rauc-mark-good.service will be called which will reset bootcount.
-
-Here is a capture of Hawkbit interface with STM32MP OTA update completed:
-![Hardware picture example](files/pictures/Capture_Hawkbit_Demo_FOTA.png)
-
-
-## 6. Extra explanations
 
 ### About metadata partition version
 Since ecosystem-v6.0.0, metadata format as been moved from v1 to v2.
