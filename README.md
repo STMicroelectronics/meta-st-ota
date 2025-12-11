@@ -58,7 +58,6 @@ A STM32MP135F-DK or STM32MP157F-DK2 or STM32MP157F-EV1 or STM32MP215F-DK or STM3
 ```
 cd <Yocto source tree>/layers
 git clone --branch scarthgap https://github.com/rauc/meta-rauc.git
-cd meta-rauc
 
 cd <Yocto source tree>/layers/meta-st
 git clone --branch scarthgap https://github.com/PRG-MPU-CUST/meta-st-ota.git
