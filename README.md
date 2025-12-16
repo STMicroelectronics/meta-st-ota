@@ -1,5 +1,6 @@
 # meta-st-ota
-
+This layer is not a reference design for a product but it has the unique goal to show how the secure firmware update is working in OpenSTLinux.
+To have deeper information about RAUC or to have support to design a product with, you can contact [Pengutronix]( https://www.st.com/content/st_com_cx/en/partner/partner-program/partnerpage/Pengutronix.html), member of ST partner Program and maintainer of RAUC.
 
 ## Overview
 - This layer is used to demonstrate SW update OTA use case on STM32MPU boards.
