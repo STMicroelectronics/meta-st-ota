@@ -61,7 +61,7 @@ cd <Yocto source tree>/layers
 git clone --branch scarthgap https://github.com/rauc/meta-rauc.git
 
 cd <Yocto source tree>/layers/meta-st
-git clone --branch scarthgap https://github.com/PRG-MPU-CUST/meta-st-ota.git
+git clone --branch scarthgap https://github.com/STMicroelectronics/meta-st-ota.git
 ```
 - The meta-rauc layer provides support for integrating the RAUC update tool into the device.
 - The meta-st-ota layer which provides all STM32MP specifities is automatically added when sourcing envsetup.sh with MACHINE option.
