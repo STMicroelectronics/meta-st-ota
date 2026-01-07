@@ -8,17 +8,13 @@ To have deeper information about RAUC or to have support to design a product wit
 - The embedded client is [rauc](https://rauc.readthedocs.io/en/latest/) which can get software updates from:
   - A back-end framework (ex:[Hawkbit](https://www.eclipse.org/hawkbit/)) with a glue layer called [rauc-hawkbit](https://github.com/rauc/rauc-hawkbit) polls the Hawkbit server to transmit new bundle to rauc. Nevertheless, the latest Hawkbit versions don't include UI because Vaadin 8 hawkBit UI was shut down (more details [here](https://eclipse.dev/hawkbit/blog/2023-11-22-vaadin8_ui_discontinuation/)), that's why event if [rauc-hawkbit](https://github.com/rauc/rauc-hawkbit) is still included in this layer, [Hawkbit](https://www.eclipse.org/hawkbit/) won't be demonstrated in this layer.
   - Any deployment method listed [here](https://rauc.readthedocs.io/en/latest/advanced.html#software-deployment).
-- This layer is based on official DV-6.1 [openstlinux-25-06-11](https://wiki.st.com/stm32mpu/wiki/STM32_MPU_OpenSTLinux_release_note_-_v6.1.0) which also needs [rauc layer](https://github.com/rauc/meta-rauc).
+- This layer is based on official ecosystem-v6.2.0 [openstlinux-26-02-18](https://wiki.st.com/stm32mpu/wiki/STM32_MPU_OpenSTLinux_release_note_-_v6.2.0) which also needs [rauc layer](https://github.com/rauc/meta-rauc).
 
 
 ## What's new in that release ?
-This release is mostly an update to be able to run on top of ecosystem-v6.1.0, with :
-- Support of stm32mp215f-dk board
-- Several patches have been upstreamed into STM32MPU-ecosystem, so they have been removed from this layer:
-  - u-boot: propagate boot index
-  - u-boot: stm32prog: add support rootfs-a for OTA
-  - u-boot: mkfwumdata: manage bank accepted entry
-- Hawkbit not demonstrated anymore (since Vaadin 8 hawkBit UI was shut down)
+This release is mostly an update to be able to run on top of ecosystem-v6.2.0, with:
+- One patch upstreamed into STM32MPU-ecosystem, so it has been removed from this layer:
+  - u-boot: propagate boot index from tf-a
 
 ## Table of Contents
 1. Documentation
@@ -31,7 +27,7 @@ This release is mostly an update to be able to run on top of ecosystem-v6.1.0, w
 
 
 ## 1. Documentation
-- [STM32MPU-ecosystem-v6.1.0 Release note](https://wiki.st.com/stm32mpu/wiki/STM32_MPU_OpenSTLinux_release_note_-_v6.1.0)
+- [STM32MPU-ecosystem-v6.2.0 Release note](https://wiki.st.com/stm32mpu/wiki/STM32_MPU_OpenSTLinux_release_note_-_v6.2.0)
 - [STM32MP13 ressources](https://wiki.st.com/stm32mpu/wiki/STM32MP13_resources)
 - [MP13 Disco schematic](https://wiki.st.com/stm32mpu/wiki/STM32MP13_resources#MB1635_schematics)
 - [STM32MP15 ressources](https://wiki.st.com/stm32mpu/wiki/STM32MP15_resources)
@@ -56,9 +52,13 @@ A STM32MP135F-DK or STM32MP157F-DK2 or STM32MP157F-EV1 or STM32MP215F-DK or STM3
 ### Replace [Initializing the OpenEmbedded build environment chapter](https://wiki.st.com/stm32mpu/wiki/STM32MPU_Distribution_Package#Initializing_the_OpenEmbedded_build_environment) content by the hereafter explanations:
 
 ### Fetch the two following layers :
+
+Since rauc-1.15, the file extension management has changed, and I need some time to fix it : waiting the correction, remaining on rauc-1.14 avoids the issue.
+That's why the following `git reset --hard` is requested.
 ```
 cd <Yocto source tree>/layers
 git clone --branch scarthgap https://github.com/rauc/meta-rauc.git
+cd meta-rauc && git reset --hard a0f4a8b9986954239850b9d4256c003c91e6b931
 
 cd <Yocto source tree>/layers/meta-st
 git clone --branch scarthgap https://github.com/STMicroelectronics/meta-st-ota.git

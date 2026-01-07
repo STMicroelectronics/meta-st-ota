@@ -8,10 +8,10 @@ P	0x07	metadata2	FWU_MDATA	mmc0	0x000C4400	arm-trusted-firmware/metadata.bin
 P	0x08	fip-a	FIP	mmc0	0x00104400	fip/fip-stm32mp135f-dk-optee-sdcard.bin
 PED	0x09	fip-b	FIP	mmc0	0x00504400	none
 PED	0x0A	u-boot-env	ENV	mmc0	0x00904400	none
-P	0x10	bootfs-a	System	mmc0	0x00984400	st-image-bootfs-openstlinux-weston-stm32mp1-ota.bootfs.ext4
+P	0x10	bootfs-a	System	mmc0	0x00984400	st-image-weston-openstlinux-weston-stm32mp1-ota.splitted-bootfs.ext4
 PED	0x11	bootfs-b	System	mmc0	0x04984400	none
-P	0x12	vendorfs-a	FileSystem	mmc0	0x08984400	st-image-vendorfs-openstlinux-weston-stm32mp1-ota.vendorfs.ext4
+P	0x12	vendorfs-a	FileSystem	mmc0	0x08984400	st-image-weston-openstlinux-weston-stm32mp1-ota.splitted-vendorfs.ext4
 PED	0x13	vendorfs-b	FileSystem	mmc0	0x09984400	none
-P	0x14	rootfs-a	FileSystem	mmc0	0x0A984400	st-image-weston-openstlinux-weston-stm32mp1-ota.rootfs.ext4
+P	0x14	rootfs-a	FileSystem	mmc0	0x0A984400	st-image-weston-openstlinux-weston-stm32mp1-ota.splitted-rootfs.ext4
 PED	0x15	rootfs-b	FileSystem	mmc0	0x38984400	none
-P	0x16	userfs	FileSystem	mmc0	0x66984400	st-image-userfs-openstlinux-weston-stm32mp1-ota.userfs.ext4
+P	0x16	userfs	FileSystem	mmc0	0x66984400	st-image-weston-openstlinux-weston-stm32mp1-ota.splitted-userfs.ext4
