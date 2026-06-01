@@ -52,13 +52,9 @@ A STM32MP135F-DK or STM32MP157F-DK2 or STM32MP157F-EV1 or STM32MP215F-DK or STM3
 ### Replace [Initializing the OpenEmbedded build environment chapter](https://wiki.st.com/stm32mpu/wiki/STM32MPU_Distribution_Package#Initializing_the_OpenEmbedded_build_environment) content by the hereafter explanations:
 
 ### Fetch the two following layers :
-
-Since rauc-1.15, the file extension management has changed, and I need some time to fix it : waiting the correction, remaining on rauc-1.14 avoids the issue.
-That's why the following `git reset --hard` is requested.
 ```
 cd <Yocto source tree>/layers
 git clone --branch scarthgap https://github.com/rauc/meta-rauc.git
-cd meta-rauc && git reset --hard a0f4a8b9986954239850b9d4256c003c91e6b931
 
 cd <Yocto source tree>/layers/meta-st
 git clone --branch scarthgap https://github.com/STMicroelectronics/meta-st-ota.git
