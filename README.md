@@ -8,11 +8,11 @@ To have deeper information about RAUC or to have support to design a product wit
 - The embedded client is [rauc](https://rauc.readthedocs.io/en/latest/) which can get software updates from:
   - A back-end framework (ex:[Hawkbit](https://www.eclipse.org/hawkbit/)) with a glue layer called [rauc-hawkbit](https://github.com/rauc/rauc-hawkbit) polls the Hawkbit server to transmit new bundle to rauc. Nevertheless, the latest Hawkbit versions don't include UI because Vaadin 8 hawkBit UI was shut down (more details [here](https://eclipse.dev/hawkbit/blog/2023-11-22-vaadin8_ui_discontinuation/)), that's why event if [rauc-hawkbit](https://github.com/rauc/rauc-hawkbit) is still included in this layer, [Hawkbit](https://www.eclipse.org/hawkbit/) won't be demonstrated in this layer.
   - Any deployment method listed [here](https://rauc.readthedocs.io/en/latest/advanced.html#software-deployment).
-- This layer is based on official ecosystem-v6.2.0 [openstlinux-26-02-18](https://wiki.st.com/stm32mpu/wiki/STM32_MPU_OpenSTLinux_release_note_-_v6.2.0) which also needs [rauc layer](https://github.com/rauc/meta-rauc).
+- This layer is based on official ecosystem-v6.2.1 [openstlinux-26-06-10](https://wiki.st.com/stm32mpu/wiki/STM32_MPU_OpenSTLinux_release_note_-_v6.2.1) which also needs [rauc layer](https://github.com/rauc/meta-rauc).
 
 
 ## What's new in that release ?
-This release is mostly an update to be able to run on top of ecosystem-v6.2.0, with:
+This release is mostly an update to be able to run on top of ecosystem-v6.2.1, with:
 - One patch upstreamed into STM32MPU-ecosystem, so it has been removed from this layer:
   - u-boot: propagate boot index from tf-a
 
@@ -27,7 +27,7 @@ This release is mostly an update to be able to run on top of ecosystem-v6.2.0, w
 
 
 ## 1. Documentation
-- [STM32MPU-ecosystem-v6.2.0 Release note](https://wiki.st.com/stm32mpu/wiki/STM32_MPU_OpenSTLinux_release_note_-_v6.2.0)
+- [STM32MPU-ecosystem-v6.2.1 Release note](https://wiki.st.com/stm32mpu/wiki/STM32_MPU_OpenSTLinux_release_note_-_v6.2.1)
 - [STM32MP13 ressources](https://wiki.st.com/stm32mpu/wiki/STM32MP13_resources)
 - [MP13 Disco schematic](https://wiki.st.com/stm32mpu/wiki/STM32MP13_resources#MB1635_schematics)
 - [STM32MP15 ressources](https://wiki.st.com/stm32mpu/wiki/STM32MP15_resources)
@@ -40,7 +40,7 @@ This release is mostly an update to be able to run on top of ecosystem-v6.2.0, w
 
 
 ## 2. HW requirements
-A STM32MP135F-DK or STM32MP157F-DK2 or STM32MP157F-EV1 or STM32MP215F-DK or STM32MP257F-EV1 is requested.
+A STM32MP135F-DK or STM32MP157F-DK2 or STM32MP157F-EV1 or STM32MP215F-DK or STM32MP257F-DK or STM32MP257F-EV1 is requested.
 
 
 ## 3. SW requirements
@@ -109,8 +109,8 @@ More information in [RAUC documentation](https://rauc.readthedocs.io/en/latest/e
 ## 6. Extra explanations
 
 ### Post install
-At the end of the install, the script /usr/lib/rauc/post-install.sh is called by rauc in order to update some part in the new flashed images:
-- update kernel cmdline : root mount point and rauc.slot paramters
+At the end of the install, the script /usr/lib/rauc/post-install.sh is called by rauc in order to update some parts in the new flashed images:
+- update kernel cmdline : root mount point and rauc.slot parameters
 - update vendor and boot mount points
 - update boot partition to boot on the new flashed software
 - bootcount doesn't need to be reset here anymore as it is done by tf-a when it performs a normal boot (not trial)
@@ -144,3 +144,9 @@ The reason is that tf-a is not capable to write into metadata partition (only li
 - For test purpose, if you perform several OTA updates without doing a normal reboot between (in trial mode), the bootcount won't be reset and after 3 "trial" reboots, and tf-a will display the message "WARNING: Trial FWU fails to many times" because counter has not been reset, and it won't be possible to switch partitions (A to B or B to A)
 - You can sometimes notice an exception during bundle download:`Exception in callback ReadTransport._loop_reading`, but it has no impact on the use case.
 
+- On STM32MP257F-EV1 board, there are several mass storage available : if the same partlabel is present on both Sdcard and eMMC, the linux kernel can mount one of them randomly, just like that:
+```
+lrwxrwxrwx 1 root root 15 May 29  2025 metadata1 -> ../../mmcblk1p1
+lrwxrwxrwx 1 root root 15 May 29  2025 metadata2 -> ../../mmcblk0p4
+```
+So make sure the metadata1 and metadata2 are present only once.

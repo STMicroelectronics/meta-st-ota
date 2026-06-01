@@ -47,6 +47,8 @@ DEFAULT_FIP_TYPEUUID=19d5df83-11b0-457b-be2c-7559c13142a5
 DEFAULT_FIP_A_PARTUUID=4fd84c93-54ef-463f-a7ef-ae25ff887087
 DEFAULT_FIP_B_PARTUUID=09c54952-d5bf-45af-acee-335303766fb3
 DEFAULT_FWU_MDATA_TYPEUUID=8a7a84a0-8387-40f6-ab41-a8b9a5a60d23
+DEFAULT_FWU_MDATA_A_PARTUUID=5f91c128-e120-48d7-bb64-9fa9aed4c7e3
+DEFAULT_FWU_MDATA_B_PARTUUID=f469f981-5985-4206-8fb3-839956035a65
 DEFAULT_UBOOT_ENV_TYPEUUID=3de21764-95bd-54bd-a5c3-4abe786f38a8
 
 # Columns name on FLASHLAYOUT_data
@@ -352,6 +354,14 @@ function generate_gpt_partition_table_from_flash_layout() {
 		fip-b*)
 			# add fip-b PARTUUID flags
 			extrafs_param=" -u $j:${DEFAULT_FIP_B_PARTUUID}"
+			display_info="$display_info  $j"
+			;;
+		metadata1)
+			extrafs_param=" -u $j:${DEFAULT_FWU_MDATA_A_PARTUUID}"
+			display_info="$display_info  $j"
+			;;
+		metadata2)
+			extrafs_param=" -u $j:${DEFAULT_FWU_MDATA_B_PARTUUID}"
 			display_info="$display_info  $j"
 			;;
 		*)
@@ -1070,10 +1080,12 @@ else
 		echo ""
 		echo "[WARNING]: A previous raw image are present on this directory"
 		echo "[WARNING]:    '$FLASHLAYOUT_rawname'"
-		echo "[WARNING]: would you like to erase it: [Y/n]"
+		echo "[WARNING]: would you like to continue and overwrite it: [Y/n]"
 		read -r answer
 		if [[ "$answer" =~ ^[Yy]+[ESes]* ]]; then
 			rm -f "$FLASHLAYOUT_rawname" "$FLASHLAYOUT_infoname"
+		else
+			exit 0
 		fi
 	fi
 
