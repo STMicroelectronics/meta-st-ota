@@ -142,6 +142,8 @@ Where `DEFAULT_SDCARD_PARTUUID` is the UUID of `bootfs-a` and `SECOND_SDCARD_PAR
 - If the OTA process is stopped (ex: press on reset button) during its execution, the OTA procedure will restart from the beginning.
 The reason is that tf-a is not capable to write into metadata partition (only linux does)
 - For test purpose, if you perform several OTA updates without doing a normal reboot between (in trial mode), the bootcount won't be reset and after 3 "trial" reboots, and tf-a will display the message "WARNING: Trial FWU fails to many times" because counter has not been reset, and it won't be possible to switch partitions (A to B or B to A)
+- For some reason, if a reboot can't be perform between two OTA updates, the system remains in "trial" mode, so the boot count is never reset : after 3 updates, the next update will fail because the boot count will be reached. In that case, Linux will have to reset the boot count which is stored in [FWU_INFO backup register](https://wiki.st.com/stm32mpu/wiki/STM32MP2_backup_registers#Firmware_update_info_feature). Nevertheless, this "secure write/ non secure" read tamper is not writtable by Linux, so the recommandation is to use a "non secure write" tamper instead.
+
 - You can sometimes notice an exception during bundle download:`Exception in callback ReadTransport._loop_reading`, but it has no impact on the use case.
 
 - On STM32MP257F-EV1 board, there are several mass storage available : if the same partlabel is present on both Sdcard and eMMC, the linux kernel can mount one of them randomly, just like that:
