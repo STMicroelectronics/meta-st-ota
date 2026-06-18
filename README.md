@@ -84,13 +84,13 @@ Before executing an OTA update, you need to:
 
 ### How to generate a bundle ?
 The content of the bundle is a script in the bundle recipe `layers/meta-st/meta-st-ota/recipes-core/bundles/update-st-bundle-<board name>.bb`
-Where `<board name>` can be `stm32mp157f-ev1`, `stm32mp157f-dk2`, `stm32mp135f-dk`, `stm32mp215f-dk` or `stm32mp257f-ev1`.
+Where `<board name>` can be `stm32mp157f-ev1`, `stm32mp157f-dk2`, `stm32mp135f-dk`, `stm32mp215f-dk`, `stm32mp257f-ev1-sdcard` or `stm32mp257f-ev1-emmc`.
 
 The layer contains prebuilt certificates that need to be updated for production.
 
-Execute the following command to build the bundle (example for MP13 disco board):
+Execute the following command to build the bundle (example for MP25 Eval board):
 ```
-bitbake update-st-bundle-stm32mp257f-ev1
+bitbake update-st-bundle-stm32mp257f-ev1-sdcard
 ```
 More information in [RAUC documentation](https://rauc.readthedocs.io/en/latest/integration.html#bundle-generation)
 
