@@ -1,8 +1,0 @@
-[Unit]
-Description=Rauc Good-marking Service
-
-[Service]
-ExecStart=/bin/bash /usr/lib/rauc/st-status-mark-good.sh
-
-[Install]
-WantedBy=multi-user.target

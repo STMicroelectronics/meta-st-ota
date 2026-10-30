@@ -6,6 +6,8 @@ Subject: [PATCH] support bin extension
 Avoid the following error:
 Unsupported image /run/rauc/bundle/fip-stm32mp135f-dk-optee.bin
 for slot type raw
+
+Upstream-Status: Inappropriate [OTA specific]
 ---
  src/update_handler.c | 1 +
  1 file changed, 1 insertion(+)

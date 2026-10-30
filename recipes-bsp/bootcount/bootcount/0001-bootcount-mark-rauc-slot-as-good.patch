@@ -1,0 +1,18 @@
+From: Christophe Guibout <christophe.guibout@st.com>
+Subject: [PATCH] bootcount: mark rauc slot as good on accepted bank
+
+Once the active FWU bank is accepted, also mark the booted RAUC slot
+as good so that RAUC and TF-A bank states stay in sync.
+
+Upstream-Status: Inappropriate [OTA specific]
+
+--- a/bootcount.sh
++++ b/bootcount.sh
+@@ -32,6 +32,7 @@
+ 
+ if [ "${bank_state}" = "valid" ]; then
+     fwumdata -s "${active_index}" accepted
++    /usr/bin/rauc status mark-good
+ fi
+ 
+ exit 0

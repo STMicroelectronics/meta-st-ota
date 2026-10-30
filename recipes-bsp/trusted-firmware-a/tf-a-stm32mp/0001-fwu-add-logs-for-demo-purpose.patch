@@ -1,0 +1,97 @@
+From 232c30b333cad950127279e26acad19f02c72caa Mon Sep 17 00:00:00 2001
+From: Christophe Guibout <christophe.guibout@st.com>
+Date: Thu, 29 Oct 2026 11:17:16 +0100
+Subject: [PATCH] fwu: add logs for demo purpose
+
+These logs help to have a better understanding of fwu feature.
+
+Upstream-Status: Inappropriate [demo purpose only]
+Signed-off-by: Christophe Guibout <christophe.guibout@st.com>
+---
+ drivers/fwu/fwu.c               |  2 ++
+ plat/st/common/bl2_io_storage.c | 10 +++++++---
+ plat/st/common/stm32mp_common.c |  2 +-
+ 3 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/fwu/fwu.c b/drivers/fwu/fwu.c
+index f59c3fe25..38aa3608a 100644
+--- a/drivers/fwu/fwu.c
++++ b/drivers/fwu/fwu.c
+@@ -66,6 +66,8 @@ static int fwu_metadata_crc_check(void)
+  ******************************************************************************/
+ static int fwu_metadata_sanity_check(void)
+ {
++	NOTICE("fwu: NR_OF_FW_BANKS: %d\n", NR_OF_FW_BANKS);
++
+ 	if (metadata.version != FWU_METADATA_VERSION) {
+ 		WARN("Incorrect FWU Metadata version of %u\n",
+ 		     metadata.version);
+diff --git a/plat/st/common/bl2_io_storage.c b/plat/st/common/bl2_io_storage.c
+index ae13edc5e..c6cdf5a22 100644
+--- a/plat/st/common/bl2_io_storage.c
++++ b/plat/st/common/bl2_io_storage.c
+@@ -816,9 +816,11 @@ uint32_t plat_fwu_get_boot_idx(void)
+ 
+ 		switch (data->bank_state[boot_idx]) {
+ 		case FWU_BANK_STATE_ACCEPTED:
++			NOTICE("FWU bank accepted: %u\n", boot_idx);
+ 			err = stm32_set_max_fwu_trial_boot_cnt();
+ 			break;
+ 		case FWU_BANK_STATE_VALID:
++			NOTICE("FWU bank valid: %u\n", boot_idx);
+ 			err = stm32_fwu_copro_status_is_failed(&status);
+ 			if (err != 0) {
+ 				ERROR("%s: Copro status bkp register access failed.\n", __func__);
+@@ -840,7 +842,7 @@ uint32_t plat_fwu_get_boot_idx(void)
+ 					WARN("Trial backup register empty : set max boot count\n");
+ 					err = stm32_set_max_fwu_trial_boot_cnt();
+ 				} else {
+-					VERBOSE("Trial FWU: %u\n",
++					NOTICE("Trial FWU: %u\n",
+ 						FWU_MAX_TRIAL_REBOOT - bootcount);
+ 				}
+ 			}
+@@ -849,7 +851,9 @@ uint32_t plat_fwu_get_boot_idx(void)
+ 		default:
+ 			ERROR("The active bank(%u) of the platform is in Invalid State.\n",
+ 			      boot_idx);
++			NOTICE("Switching to alternate boot bank\n");
+ 			boot_idx = fwu_get_alternate_boot_bank();
++			NOTICE("Clearing FWU trial boot counter\n");
+ 			err = stm32_clear_fwu_trial_boot_cnt();
+ 			break;
+ 		}
+@@ -906,7 +910,7 @@ void plat_fwu_set_images_source(const struct fwu_metadata *metadata)
+ 
+ 	boot_idx = plat_fwu_get_boot_idx();
+ 	assert(boot_idx < NR_OF_FW_BANKS);
+-	VERBOSE("Selecting to boot from bank %u\n", boot_idx);
++	NOTICE("Selecting to boot from bank %u\n", boot_idx);
+ 
+ 	fip_entry = stm32_get_fip_img_entry(metadata);
+ 	if (fip_entry == NULL) {
+@@ -1004,7 +1008,7 @@ static int get_metadata_partition_entry(unsigned int image_id,
+ 		return 0;
+ 	}
+ 
+-	VERBOSE("FWU %s partition GUID not found, trying lookup by partition name...\n",
++	NOTICE("FWU %s partition GUID not found, trying lookup by partition name...\n",
+ 		metadata_part_name);
+ 
+ 	*entry = get_partition_entry(metadata_part_name);
+diff --git a/plat/st/common/stm32mp_common.c b/plat/st/common/stm32mp_common.c
+index 64b29376b..ce08c01c2 100644
+--- a/plat/st/common/stm32mp_common.c
++++ b/plat/st/common/stm32mp_common.c
+@@ -745,7 +745,7 @@ int stm32_get_and_dec_fwu_trial_boot_cnt(uint32_t *cnt)
+ 			return ret;
+ 		}
+ 	}
+-
++	NOTICE("trial: try_cnt: %u\n", try_cnt);
+ 	*cnt = try_cnt;
+ 
+ 	return 0;
+-- 
+2.43.0
+

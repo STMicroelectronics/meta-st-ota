@@ -5,16 +5,24 @@ To have deeper information about RAUC or to have support to design a product wit
 ## Overview
 - This layer is used to demonstrate SW update OTA use case on STM32MPU boards.
 - It uses A/B mechanism concept : all updatable partitions are duplicated : for example, rootfs becomes rootfs-a and rootfs-b. When a software running on rootfs-a is notified to be upgraded, the new version is installed on rootfs-b, and then system reboots on rootfs-b which becomes the new active version.
-- The embedded client is [rauc](https://rauc.readthedocs.io/en/latest/) which can get software updates from:
-  - A back-end framework (ex:[Hawkbit](https://www.eclipse.org/hawkbit/)) with a glue layer called [rauc-hawkbit](https://github.com/rauc/rauc-hawkbit) polls the Hawkbit server to transmit new bundle to rauc. Nevertheless, the latest Hawkbit versions don't include UI because Vaadin 8 hawkBit UI was shut down (more details [here](https://eclipse.dev/hawkbit/blog/2023-11-22-vaadin8_ui_discontinuation/)), that's why event if [rauc-hawkbit](https://github.com/rauc/rauc-hawkbit) is still included in this layer, [Hawkbit](https://www.eclipse.org/hawkbit/) won't be demonstrated in this layer.
-  - Any deployment method listed [here](https://rauc.readthedocs.io/en/latest/advanced.html#software-deployment).
-- This layer is based on official ecosystem-v6.2.1 [openstlinux-26-06-10](https://wiki.st.com/stm32mpu/wiki/STM32_MPU_OpenSTLinux_release_note_-_v6.2.1) which also needs [rauc layer](https://github.com/rauc/meta-rauc).
+- The embedded client is [rauc](https://rauc.readthedocs.io/en/latest/) which can get software updates from any deployment method listed [here](https://rauc.readthedocs.io/en/latest/advanced.html#software-deployment).
+- This layer is based on official ecosystem-v7.0.0 [openstlinux-26-10-14](https://wiki.st.com/stm32mpu/wiki/STM32_MPU_OpenSTLinux_release_note_-_v7.0.0) which also needs [rauc layer](https://github.com/rauc/meta-rauc).
 
 
 ## What's new in that release ?
-This release is mostly an update to be able to run on top of ecosystem-v6.2.1, with:
-- One patch upstreamed into STM32MPU-ecosystem, so it has been removed from this layer:
-  - u-boot: propagate boot index from tf-a
+This release is mostly an update to be able to run on top of ecosystem-v7.0.0, with:
+  - Update layer to be compatible with wrynose
+  - fwumdata linux tool is used to update metadata partitions
+  - tsv memory flash layout dynamically generated
+  - u-boot is able to read metadata partition
+  - Hawkbit no more used in the demo : use rauc install instead
+  - systemctl services replaced by bootcount service by default
+      in ecosystem-v7.0.0
+  - removed post-install.sh script as kernel cmdline is dynamically
+      built, as well as other partitions mount points.
+  - st-boot-script.sh replaced by st-rauc-fwu.sh which automatically
+      update metadata partition
+  - sdcard-raw-tools is now smart enough in ecosystem-v7.0.0
 
 ## Table of Contents
 1. Documentation
@@ -27,7 +35,7 @@ This release is mostly an update to be able to run on top of ecosystem-v6.2.1, w
 
 
 ## 1. Documentation
-- [STM32MPU-ecosystem-v6.2.1 Release note](https://wiki.st.com/stm32mpu/wiki/STM32_MPU_OpenSTLinux_release_note_-_v6.2.1)
+- [STM32MPU-ecosystem-v7.0.0 Release note](https://wiki.st.com/stm32mpu/wiki/STM32_MPU_OpenSTLinux_release_note_-_v7.0.0)
 - [STM32MP13 ressources](https://wiki.st.com/stm32mpu/wiki/STM32MP13_resources)
 - [MP13 Disco schematic](https://wiki.st.com/stm32mpu/wiki/STM32MP13_resources#MB1635_schematics)
 - [STM32MP15 ressources](https://wiki.st.com/stm32mpu/wiki/STM32MP15_resources)
@@ -40,7 +48,8 @@ This release is mostly an update to be able to run on top of ecosystem-v6.2.1, w
 
 
 ## 2. HW requirements
-A STM32MP135F-DK or STM32MP157F-DK2 or STM32MP157F-EV1 or STM32MP215F-DK or STM32MP257F-DK or STM32MP257F-EV1 is requested.
+A STM32MP257F-EV1 is requested.
+STM32MP135F-DK, STM32MP157F-DK2, STM32MP157F-EV1, STM32MP215F-DK and STM32MP257F-DK are not yet validated.
 
 
 ## 3. SW requirements
@@ -54,16 +63,16 @@ A STM32MP135F-DK or STM32MP157F-DK2 or STM32MP157F-EV1 or STM32MP215F-DK or STM3
 ### Fetch the two following layers :
 ```
 cd <Yocto source tree>/layers
-git clone --branch scarthgap https://github.com/rauc/meta-rauc.git
+git clone --branch wrynose https://github.com/rauc/meta-rauc.git
 
 cd <Yocto source tree>/layers/meta-st
-git clone --branch scarthgap https://github.com/STMicroelectronics/meta-st-ota.git
+git clone --branch wrynose https://github.com/STMicroelectronics/meta-st-ota.git
 ```
 - The meta-rauc layer provides support for integrating the RAUC update tool into the device.
 - The meta-st-ota layer which provides all STM32MP specifities is automatically added when sourcing envsetup.sh with MACHINE option.
 
 ### Initializing the OpenEmbedded build environment
-The layer meta-st-ota contains a machine named "stm32mp1-ota" or "stm32mp2-ota" that needs to be used when sourcing the environment:
+The layer meta-st-ota contains a machine named "stm32mp2-ota" that needs to be used when sourcing the environment:
 ```
 DISTRO=openstlinux-weston MACHINE=stm32mp2-ota source layers/meta-st/scripts/envsetup.sh
 ```
@@ -95,10 +104,6 @@ bitbake update-st-bundle-stm32mp257f-ev1-sdcard
 More information in [RAUC documentation](https://rauc.readthedocs.io/en/latest/integration.html#bundle-generation)
 
 ### How to deploy the bundle into the target ?
-The latest Hawkbit versions don't include UI because Vaadin 8 hawkBit UI was shut down : more details [here](https://eclipse.dev/hawkbit/blog/2023-11-22-vaadin8_ui_discontinuation/), .
-
-More information in [Hawkbit documentation](https://www.eclipse.org/hawkbit/) and [rauc-hawkbit documentation](https://github.com/rauc/rauc-hawkbit/blob/master/README.rst)
-
 After having built the bundle, copy it into the target:
 ```
 wget http://<your server IP addr>/<bundle file> && sync
@@ -108,22 +113,12 @@ More information in [RAUC documentation](https://rauc.readthedocs.io/en/latest/e
 
 ## 6. Extra explanations
 
-### Post install
-At the end of the install, the script /usr/lib/rauc/post-install.sh is called by rauc in order to update some parts in the new flashed images:
-- update kernel cmdline : root mount point and rauc.slot parameters
-- update vendor and boot mount points
-- update boot partition to boot on the new flashed software
-- bootcount doesn't need to be reset here anymore as it is done by tf-a when it performs a normal boot (not trial)
+### st-rauc-fwu.sh
+st-rauc-fwu.sh is used by Rauc to get informations from metadata partition.
 
-On reboot, if new image succeeds to boot, the service rauc-mark-good.service will be called which will reset bootcount.
 
-### About metadata partition version
-Since ecosystem-v6.0.0, metadata format as been moved from v1 to v2.
-- A new device will use metadata v2
-- A device already in production with metadata v1 stays with metadata v1 (tf-a BL2 and metadadata partition and not updatable). That's why update agent starting from ecosystem-v6.0.0 needs to support both versions:
-  - metadata v2 : enabled by default
-  - metadata v1 : disabled by default. To enable it, rename fwu-gen-metadata-v2 into fwu-gen-metadata-v1 in st-image-weston.bbappend recipe.
-
+### About the bootcount
+On reboot, if new image succeeds to boot, the service bootcount will be called which will set the image from Valid to Accepted in the metadata partition, so the botcount will be disabled.
 
 ### About partuuid
 The boot partition is selected by the kernel through its UUID which is defined in create_sdcard_from_flashlayout.sh:
@@ -131,24 +126,21 @@ The boot partition is selected by the kernel through its UUID which is defined i
 DEFAULT_SDCARD_PARTUUID=e91c4e10-16e6-4c0e-bd0e-77becf4a3582
 SECOND_SDCARD_PARTUUID=087c3ebe-60ca-4517-a55d-c1d7237ead55
 ```
-Where `DEFAULT_SDCARD_PARTUUID` is the UUID of `bootfs-a` and `SECOND_SDCARD_PARTUUID` is the UUID of `bootfs-b`
+Where `DEFAULT_SDCARD_PARTUUID` is the UUID of `bootfs-a` and `SECOND_SDCARD_PARTUUID` is the UUID of `bootfs-b`.
 
 ### How to know on which boot partition type we are ?
 - tf-a : the following log is displayed  'INFO:    Selecting to boot from bank 0' if "A" partition is used (1 in case of "B" partition)
-- u-boot : "Boot A" or "Boot B" is displayed depending on selected boot partition
-- kernel : in the kernel cmdline, rauc.slot=A if we are in "Boot A" or rauc.slot=B if we are in "Boot B"
+- u-boot and kernel : both display te kernel cmdline where rauc.slot=A if we are in "Boot A" or rauc.slot=B if we are in "Boot B"
 
 ## 7. Limitations - issues
 - If the OTA process is stopped (ex: press on reset button) during its execution, the OTA procedure will restart from the beginning.
-The reason is that tf-a is not capable to write into metadata partition (only linux does)
+The reason is that tf-a is not capable to write into metadata partition (only linux does through fwumdata tool)
 - For test purpose, if you perform several OTA updates without doing a normal reboot between (in trial mode), the bootcount won't be reset and after 3 "trial" reboots, and tf-a will display the message "WARNING: Trial FWU fails to many times" because counter has not been reset, and it won't be possible to switch partitions (A to B or B to A)
 - For some reason, if a reboot can't be perform between two OTA updates, the system remains in "trial" mode, so the boot count is never reset : after 3 updates, the next update will fail because the boot count will be reached. In that case, Linux will have to reset the boot count which is stored in [FWU_INFO backup register](https://wiki.st.com/stm32mpu/wiki/STM32MP2_backup_registers#Firmware_update_info_feature). Nevertheless, this "secure write/ non secure" read tamper is not writtable by Linux, so the recommandation is to use a "non secure write" tamper instead.
-
-- You can sometimes notice an exception during bundle download:`Exception in callback ReadTransport._loop_reading`, but it has no impact on the use case.
 
 - On STM32MP257F-EV1 board, there are several mass storage available : if the same partlabel is present on both Sdcard and eMMC, the linux kernel can mount one of them randomly, just like that:
 ```
 lrwxrwxrwx 1 root root 15 May 29  2025 metadata1 -> ../../mmcblk1p1
 lrwxrwxrwx 1 root root 15 May 29  2025 metadata2 -> ../../mmcblk0p4
 ```
-So make sure the metadata1 and metadata2 are present only once.
+That's why it's preferable to use partuuid instead.
